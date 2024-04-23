@@ -1,5 +1,5 @@
 import os
-
+import time
 import cv2
 
 
@@ -32,7 +32,7 @@ for j in range(number_of_classes):
         cv2.imshow('frame', frame)
         cv2.waitKey(25)
         cv2.imwrite(os.path.join(DATA_DIR, str(j), '{}.jpg'.format(counter)), frame)
-
+        time.sleep(0.1)
         counter += 1
 
 cap.release()
