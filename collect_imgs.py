@@ -19,7 +19,12 @@ for j in range(number_of_classes):
     done = False
     while True:
         ret, frame = cap.read()
-        cv2.rectangle(frame, (500,100), (1300,1000), (0, 0, 0), 4)
+        H, W, _ = frame.shape
+
+        minY, maxY = H // 8, H - H // 8
+        minX, maxX = W // 3, W - W // 3
+
+        cv2.rectangle(frame, (minX,minY), (maxX,maxY), (0, 0, 0), 4)
         cv2.putText(frame, 'Ready? Press "Q" ! :)', (100, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (0, 255, 0), 3,
                     cv2.LINE_AA)
         cv2.imshow('frame', frame)
@@ -29,10 +34,15 @@ for j in range(number_of_classes):
     counter = 0
     while counter < dataset_size:
         ret, frame = cap.read()
-        cv2.rectangle(frame, (500,100), (1300,1000), (0, 0, 0), 4)
+        H, W, _ = frame.shape
+
+        minY, maxY = H // 8, H - H // 8
+        minX, maxX = W // 3, W - W // 3
+
+        cv2.rectangle(frame, (minX,minY), (maxX,maxY), (0, 0, 0), 4)
         cv2.imshow('frame', frame)
         cv2.waitKey(25)
-        cv2.imwrite(os.path.join(DATA_DIR, str(j), '{}.jpg'.format(counter)), frame[100:1000, 500:1300])
+        cv2.imwrite(os.path.join(DATA_DIR, str(j), '{}.jpg'.format(counter)), frame[minY:maxY, minX:maxX])
         time.sleep(0.1)
         counter += 1
 
