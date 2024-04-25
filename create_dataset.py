@@ -19,8 +19,8 @@ labels = []
 for dir_ in os.listdir(DATA_DIR):
     print(dir_)
     # Sometimes the lines below need commented in/out try each just in case
-    # if os.path.join(DATA_DIR, dir_) == "./data/.DS_Store":
-    #     os.remove("./data/.DS_Store")
+    if os.path.join(DATA_DIR, dir_) == "./data/.DS_Store":
+        os.remove("./data/.DS_Store")
     for img_path in os.listdir(os.path.join(DATA_DIR, dir_)):
         data_aux = []
 

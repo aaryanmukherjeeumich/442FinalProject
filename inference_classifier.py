@@ -104,6 +104,8 @@ start_time = None
 current_char = None
 
 while True:
+
+    # these should all be 2d arrays
     data_aux = []
     x_ = []
     y_ = []
@@ -123,40 +125,53 @@ while True:
                 mp_drawing_styles.get_default_hand_connections_style())
 
         for hand_landmarks in results.multi_hand_landmarks:
+
+            sub_data_aux = []
+            sub_x = []
+            sub_y = []
             for i in range(len(hand_landmarks.landmark)):
                 x = hand_landmarks.landmark[i].x
                 y = hand_landmarks.landmark[i].y
+                sub_x.append(x)
+                sub_y.append(y)
 
-                x_.append(x)
-                y_.append(y)
+            x_.append(sub_x)
+            y_.append(sub_y)
 
             for i in range(len(hand_landmarks.landmark)):
                 x = hand_landmarks.landmark[i].x
                 y = hand_landmarks.landmark[i].y
-                data_aux.append(x - min(x_))
-                data_aux.append(y - min(y_))
+                sub_data_aux.append(x - min(sub_x))
+                sub_data_aux.append(y - min(sub_y))
 
-        x1 = int(min(x_) * W) - 10
-        y1 = int(min(y_) * H) - 10
+            data_aux.append(np.asarray(sub_data_aux))
 
-        x2 = int(max(x_) * W) - 10
-        y2 = int(max(y_) * H) - 10
+        for i in range(len(data_aux)):
 
-        prediction = model.predict([np.asarray(data_aux)])
+            x_coors = x_[i]
+            y_coors = y_[i]
+            data = data_aux[i]
 
-        predicted_character = labels_dict[int(prediction[0])]
 
-        if predicted_character != current_char:
-            current_char = predicted_character
-            start_time = time.time()
+            x1 = int(min(x_coors) * W) - 10
+            y1 = int(min(y_coors) * H) - 10
 
-        elapsed_time = time.time() - start_time
+            x2 = int(max(x_coors) * W) - 10
+            y2 = int(max(y_coors) * H) - 10
 
-        
+            prediction = model.predict([np.asarray(data)])
 
-        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 0), 4)
-        cv2.putText(frame, predicted_character, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (0, 0, 0), 3,
-                    cv2.LINE_AA)
+            predicted_character = labels_dict[int(prediction[0])]
+
+            if predicted_character != current_char:
+                current_char = predicted_character
+                start_time = time.time()
+
+            elapsed_time = time.time() - start_time
+
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 0), 4)
+            cv2.putText(frame, predicted_character, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (0, 0, 0), 3,
+                        cv2.LINE_AA)
 
     cv2.imshow('frame', frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
