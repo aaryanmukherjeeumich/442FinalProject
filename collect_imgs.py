@@ -43,7 +43,7 @@ for j in range(number_of_classes):
         cv2.imshow('frame', frame)
         cv2.waitKey(25)
         cv2.imwrite(os.path.join(DATA_DIR, str(j), '{}.jpg'.format(counter)), frame[minY:maxY, minX:maxX])
-        time.sleep(0.1)
+        time.sleep(0.05)
         counter += 1
 
 cap.release()
