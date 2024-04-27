@@ -12,6 +12,8 @@ from keras.utils import to_categorical
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.initializers import HeNormal
+import tensorflow as tf
+
 
 svm_params = {
     'C': [0.001, 0.01, 0.1, 1, 10, 100],  
@@ -87,29 +89,15 @@ def train_hand_model(model_type):
         sel_loss = selected_parameters['loss']
         print("input shape???: ", x_train.shape[1])
         # Defining the model architecture
-        if (kern_init == 'HeNormal'):
-            classifier = Sequential([
-            Input(shape=(x_train.shape[1],)),
-            Dense(units=64, kernel_initializer=HeNormal(), activation='relu'),
-            Dense(units=128, kernel_initializer=HeNormal(), activation='relu'),
-            Dense(units=64, kernel_initializer=HeNormal(), activation='relu'),
-            Dense(units=32, kernel_initializer=HeNormal(), activation='relu'),
-            Dense(units=32, kernel_initializer=HeNormal(), activation='relu'),
-            Dense(units=26, kernel_initializer=HeNormal())
-        ])
-        else: #use kern_init as value 'uniform' or 'normal'
-            classifier = Sequential([
-            Input(shape=(x_train.shape[1],)),
-            Dense(units=64, kernel_initializer=kern_init, activation='relu'),
-            Dense(units=128, kernel_initializer=kern_init, activation='relu'),
-            Dense(units=64, kernel_initializer=kern_init, activation='relu'),
-            Dense(units=32, kernel_initializer=kern_init, activation='relu'),
-            Dense(units=32, kernel_initializer=kern_init, activation='relu'),
-            Dense(units=26, kernel_initializer=kern_init)
+        model = tf.keras.models.Sequential([
+            tf.keras.layers.Dense(128, activation='relu', input_shape=(x_train.shape[1],)),
+            tf.keras.layers.Dropout(0.2),  # Add dropout for regularization
+            tf.keras.layers.Dense(64, activation='relu'),
+            tf.keras.layers.Dropout(0.2),  # Add dropout for regularization
+            tf.keras.layers.Dense(26, activation='softmax')  # Assuming you have 10 classes for sign language letters
         ])
 
         print("Running neural network with parameters: ", selected_parameters, "\n...\n")
-        model = classifier
         model.compile(optimizer=sel_optimizer, loss=sel_loss, metrics=['accuracy'])
         print('compiled')
         # Training the model
