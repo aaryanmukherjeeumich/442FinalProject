@@ -22,7 +22,6 @@ svm_params = {
 }
 
 nn_params = {
-    'kernel': ['HeNormal', 'uniform', 'normal'],
     'optimizer': ['adam', 'SGD', 'adagrad', 'adamax', 'nadam'],
     'batch_size': [8, 16, 32, 64, 128, 256, 512],
     'epochs': [5, 10, 15, 20, 30, 40, 50, 75, 100],
@@ -82,19 +81,17 @@ def train_hand_model(model_type):
     elif model_type=="neural_net":
         selected_parameters = random_parameters(nn_params)
 
-        kern_init = selected_parameters['kernel']
         sel_optimizer = selected_parameters['optimizer']
         sel_batchsize = selected_parameters['batch_size']
         sel_epochs = selected_parameters['epochs']
         sel_loss = selected_parameters['loss']
         print("input shape???: ", x_train.shape[1])
-        # Defining the model architecture
         model = tf.keras.models.Sequential([
             tf.keras.layers.Dense(128, activation='relu', input_shape=(x_train.shape[1],)),
-            tf.keras.layers.Dropout(0.2),  # Add dropout for regularization
+            tf.keras.layers.Dropout(0.2),  
             tf.keras.layers.Dense(64, activation='relu'),
-            tf.keras.layers.Dropout(0.2),  # Add dropout for regularization
-            tf.keras.layers.Dense(26, activation='softmax')  # Assuming you have 10 classes for sign language letters
+            tf.keras.layers.Dropout(0.2),  
+            tf.keras.layers.Dense(26, activation='softmax')  
         ])
 
         print("Running neural network with parameters: ", selected_parameters, "\n...\n")

@@ -96,10 +96,22 @@ while True:
             x2 = int(max(x_coors) * W) - 10
             y2 = int(max(y_coors) * H) - 10
 
-            prediction = model.predict([np.asarray(data)])
+            data = np.asarray(data).reshape(1, -1)
 
-            predicted_character = labels_dict[int(prediction[0])]
-            predicted_character = labels_dict[int(prediction[0])]
+
+            prediction = model.predict(data)
+
+            if len(prediction[0]) > 4:
+                print("option 1")
+                max_val = np.argmax(prediction[0])
+                predicted_character = labels_dict[int(max_val)]
+                
+            else:
+                print("option 2")
+                predicted_character = labels_dict[int(prediction[0])]
+
+            print("prediction: ", prediction)
+            print("prediction[0]:", prediction[0])
 
         if predicted_character != current_char:
             current_char = predicted_character
