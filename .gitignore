@@ -1,3 +1,4 @@
 data/
 .DS_Store
 model.p
+data.pickle
