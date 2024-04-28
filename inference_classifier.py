@@ -5,121 +5,133 @@ import autocorrect
 #pip install jamspell   
 # import jamspell
 from textblob import TextBlob
-
-
+import argparse
 
 import cv2
 import mediapipe as mp
 import numpy as np
 
-model_dict = pickle.load(open('./model.p', 'rb'))
-model = model_dict['model']
+def parse_command_line_arguments():
+    parser = argparse.ArgumentParser(description = "Description for my parser")
+    parser.add_argument("-a", "--autocorrect", help = "Options: 1, 0", required = False, default = 1)
+    argument = parser.parse_args()
 
-cap = cv2.VideoCapture(0)
-
-mp_hands = mp.solutions.hands
-mp_drawing = mp.solutions.drawing_utils
-mp_drawing_styles = mp.solutions.drawing_styles
-
-hands = mp_hands.Hands(static_image_mode=True, min_detection_confidence=0.3)
-
-labels_dict = {
-    0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H', 8: 'I',
-    9: 'J', 10: 'K', 11: 'L', 12: 'M', 13: 'N', 14: 'O', 15: 'P', 16: 'Q',
-    17: 'R', 18: 'S', 19: 'T', 20: 'U', 21: 'V', 22: 'W', 23: 'X', 24: 'Y', 25: 'Z'
-}
-
-last_change_time = time.time()
-start_time = time.time()
-current_char = None
-word = ""
-
-# spell = autocorrect.Speller()
-# spell = jamspell.TSpellCorrector()
-# spell.LoadLangModel('en.bin')
-last_hand_time = time.time()
-_ , start_frame = cap.read()
-
-while True:
-
-    # these should all be 2d arrays
-    data_aux = []
-    x_ = []
-    y_ = []
-
-    ret, frame = cap.read()
-
-    H, W, _ = frame.shape
-
-    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-    results = hands.process(frame_rgb)
-    if results.multi_hand_landmarks:
-        for hand_landmarks in results.multi_hand_landmarks:
-            mp_drawing.draw_landmarks(
-                frame, hand_landmarks, mp_hands.HAND_CONNECTIONS,
-                mp_drawing_styles.get_default_hand_landmarks_style(),
-                mp_drawing_styles.get_default_hand_connections_style())
-
-        for hand_landmarks in results.multi_hand_landmarks:
-
-            sub_data_aux = []
-            sub_x = []
-            sub_y = []
-            for i in range(len(hand_landmarks.landmark)):
-                x = hand_landmarks.landmark[i].x
-                y = hand_landmarks.landmark[i].y
-                sub_x.append(x)
-                sub_y.append(y)
-
-            x_.append(sub_x)
-            y_.append(sub_y)
-
-            for i in range(len(hand_landmarks.landmark)):
-                x = hand_landmarks.landmark[i].x
-                y = hand_landmarks.landmark[i].y
-                sub_data_aux.append(x - min(sub_x))
-                sub_data_aux.append(y - min(sub_y))
-
-            data_aux.append(np.asarray(sub_data_aux))
-
-        for i in range(len(data_aux)):
-
-            x_coors = x_[i]
-            y_coors = y_[i]
-            data = data_aux[i]
+    return int(argument.autocorrect)
+    
 
 
-            x1 = int(min(x_coors) * W) - 10
-            y1 = int(min(y_coors) * H) - 10
+def classify_user(auto_corr):
 
-            x2 = int(max(x_coors) * W) - 10
-            y2 = int(max(y_coors) * H) - 10
+    print("auto_corr: ", auto_corr)
 
-            data = np.asarray(data).reshape(1, -1)
+    model_dict = pickle.load(open('./model.p', 'rb'))
+    model = model_dict['model']
+
+    cap = cv2.VideoCapture(0)
+
+    mp_hands = mp.solutions.hands
+    mp_drawing = mp.solutions.drawing_utils
+    mp_drawing_styles = mp.solutions.drawing_styles
+
+    hands = mp_hands.Hands(static_image_mode=True, min_detection_confidence=0.3)
+
+    labels_dict = {
+        0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H', 8: 'I',
+        9: 'J', 10: 'K', 11: 'L', 12: 'M', 13: 'N', 14: 'O', 15: 'P', 16: 'Q',
+        17: 'R', 18: 'S', 19: 'T', 20: 'U', 21: 'V', 22: 'W', 23: 'X', 24: 'Y', 25: 'Z'
+    }
+
+    last_change_time = time.time()
+    start_time = time.time()
+    current_char = None
+    word = ""
+
+    # spell = autocorrect.Speller()
+    # spell = jamspell.TSpellCorrector()
+    # spell.LoadLangModel('en.bin')
+    last_hand_time = time.time()
+    _ , start_frame = cap.read()
+
+    while True:
+
+        # these should all be 2d arrays
+        data_aux = []
+        x_ = []
+        y_ = []
+
+        ret, frame = cap.read()
+
+        H, W, _ = frame.shape
+
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        results = hands.process(frame_rgb)
+        if results.multi_hand_landmarks:
+            for hand_landmarks in results.multi_hand_landmarks:
+                mp_drawing.draw_landmarks(
+                    frame, hand_landmarks, mp_hands.HAND_CONNECTIONS,
+                    mp_drawing_styles.get_default_hand_landmarks_style(),
+                    mp_drawing_styles.get_default_hand_connections_style())
+
+            for hand_landmarks in results.multi_hand_landmarks:
+
+                sub_data_aux = []
+                sub_x = []
+                sub_y = []
+                for i in range(len(hand_landmarks.landmark)):
+                    x = hand_landmarks.landmark[i].x
+                    y = hand_landmarks.landmark[i].y
+                    sub_x.append(x)
+                    sub_y.append(y)
+
+                x_.append(sub_x)
+                y_.append(sub_y)
+
+                for i in range(len(hand_landmarks.landmark)):
+                    x = hand_landmarks.landmark[i].x
+                    y = hand_landmarks.landmark[i].y
+                    sub_data_aux.append(x - min(sub_x))
+                    sub_data_aux.append(y - min(sub_y))
+
+                data_aux.append(np.asarray(sub_data_aux))
+
+            for i in range(len(data_aux)):
+
+                x_coors = x_[i]
+                y_coors = y_[i]
+                data = data_aux[i]
 
 
-            prediction = model.predict(data)
+                x1 = int(min(x_coors) * W) - 10
+                y1 = int(min(y_coors) * H) - 10
 
-            if len(prediction[0]) > 4:
-                print("option 1")
-                max_val = np.argmax(prediction[0])
-                predicted_character = labels_dict[int(max_val)]
+                x2 = int(max(x_coors) * W) - 10
+                y2 = int(max(y_coors) * H) - 10
+
+                data = np.asarray(data).reshape(1, -1)
+
+
+                prediction = model.predict(data)
+
+                if len(prediction[0]) > 4:
+                    print("option 1")
+                    max_val = np.argmax(prediction[0])
+                    predicted_character = labels_dict[int(max_val)]
                 
+                else:
+                    print("option 2")
+                    predicted_character = labels_dict[int(prediction[0])]
+
+                print("prediction: ", prediction)
+                print("prediction[0]:", prediction[0])
+
+            if predicted_character != current_char:
+                current_char = predicted_character
+                last_change_time = time.time()  # Update last change time
             else:
-                print("option 2")
-                predicted_character = labels_dict[int(prediction[0])]
-
-            print("prediction: ", prediction)
-            print("prediction[0]:", prediction[0])
-
-        if predicted_character != current_char:
-            current_char = predicted_character
-            last_change_time = time.time()  # Update last change time
-        else:
-            if time.time() - last_change_time >= 3:
-                word += current_char
-                last_change_time = time.time()
+                if time.time() - last_change_time >= 3:
+                    word += current_char
+                    last_change_time = time.time()
         
 
         
@@ -130,44 +142,52 @@ while True:
 
 
 
-        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 0), 4)
-        cv2.putText(frame, predicted_character, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (0, 0, 0), 3,
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 0), 4)
+            cv2.putText(frame, predicted_character, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (0, 0, 0), 3,
                     cv2.LINE_AA)
-    else:  # No hand detected
-        if time.time() - last_hand_time >= 10:  # Check time since last hand detection
-            word += ' '  # Add a space
-            last_hand_time = time.time()  # Update last time hand was detected
+        else:  # No hand detected
+            if time.time() - last_hand_time >= 10:  # Check time since last hand detection
+                word += ' '  # Add a space
+                last_hand_time = time.time()  # Update last time hand was detected
+            # if time.time() - start_time < 10:
+            #     cv2.putText(start_frame, "Press 'q' to quit", (int(W/2 - 250), int(H/2)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            #     cv2.putText(start_frame, "Remove hands from view to add a space", (int(W/2 - 250), int(H/2)+50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            # else: 
+            #     _ , start_frame = cap.read()
+        
+
+
         # if time.time() - start_time < 10:
-        #     cv2.putText(start_frame, "Press 'q' to quit", (int(W/2 - 250), int(H/2)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-        #     cv2.putText(start_frame, "Remove hands from view to add a space", (int(W/2 - 250), int(H/2)+50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-        # else: 
-        #     _ , start_frame = cap.read()
-        
+        #     cv2.putText(frame, "Press 'q' to quit", (int(W/2 - 250), int(H/2)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        #     cv2.putText(frame, "Remove hands from view to add a space", (int(W/2 - 250), int(H/2)+50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
-
-    # if time.time() - start_time < 10:
-    #     cv2.putText(frame, "Press 'q' to quit", (int(W/2 - 250), int(H/2)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-    #     cv2.putText(frame, "Remove hands from view to add a space", (int(W/2 - 250), int(H/2)+50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-
-        
-    cv2.putText(frame, 'Autocorrection : ' +  (str(TextBlob(word.lower()).correct())), (100, 50), cv2.FONT_HERSHEY_DUPLEX, 1.3, (100, 255, 100), 3,
+        if auto_corr:
+            print("python sucks!!!!!")
+            cv2.putText(frame, 'Autocorrection : ' +  (str(TextBlob(word.lower()).correct())), (100, 50), cv2.FONT_HERSHEY_DUPLEX, 1.3, (100, 255, 100), 3,
                     cv2.LINE_AA)
-    cv2.putText(frame, 'Output : ' + (word.replace(" ", "-")), (100, 100), cv2.FONT_HERSHEY_DUPLEX, 1.3, (100, 255, 100), 3,
+        cv2.putText(frame, 'Output : ' + (word.replace(" ", "-")), (100, 100), cv2.FONT_HERSHEY_DUPLEX, 1.3, (100, 255, 100), 3,
                     cv2.LINE_AA)
     
-    cv2.putText(start_frame, "Press 'q' to quit", (int(W/2 - 250), int(H/2)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-    cv2.putText(start_frame, "Remove hands from view for 10 sec. to add a space", (int(W/2 - 250), int(H/2)+50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-    cv2.putText(start_frame, "Begining in 10 seconds", (int(W/2 - 250), int(H/2)+100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.putText(start_frame, "Press 'q' to quit", (int(W/2 - 250), int(H/2)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.putText(start_frame, "Remove hands from view for 10 sec. to add a space", (int(W/2 - 250), int(H/2)+50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.putText(start_frame, "Begining in 10 seconds", (int(W/2 - 250), int(H/2)+100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
     
-    if time.time() - start_time > 10:
-        start_frame = frame
+        if time.time() - start_time > 10:
+            start_frame = frame
     
-    cv2.imshow('frame',start_frame)
+        cv2.imshow('frame',start_frame)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
 
-cap.release()
-cv2.destroyAllWindows()
+    cap.release()
+    cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    print("flag 1")
+    auto_corr = parse_command_line_arguments()
+    print("flag 2")
+
+    classify_user(auto_corr)
