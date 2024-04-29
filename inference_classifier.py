@@ -13,12 +13,13 @@ import numpy as np
 
 
 class HandData:
-    def __init__(self):
+    def __init__(self, model):
         self.x_coors = []
         self.y_coors = []
         self.data = []
         self.last_change_time = time.time()
         self.current_char = None
+        self.model = model
 
     def reset(self):
         self.x_coors = []
@@ -33,13 +34,15 @@ def parse_command_line_arguments():
     return int(argument.autocorrect)
     
 
-
 def classify_user(auto_corr):
 
     print("auto_corr: ", auto_corr)
 
-    model_dict = pickle.load(open('./model.p', 'rb'))
-    model = model_dict['model']
+    model_dict_right = pickle.load(open('./model_Right.p', 'rb'))
+    model_right = model_dict_right['model']
+
+    model_dict_left = pickle.load(open('./model_Left.p', 'rb'))
+    model_left = model_dict_left['model']
 
     cap = cv2.VideoCapture(0)
 
@@ -65,8 +68,8 @@ def classify_user(auto_corr):
     # spell.LoadLangModel('en.bin')
 
     handDataDict = {
-        "Left": HandData(),
-        "Right": HandData()
+        "Left": HandData(model_left),
+        "Right": HandData(model_right)
     }
 
     last_hand_time = time.time()
@@ -129,7 +132,7 @@ def classify_user(auto_corr):
 
                     data = np.asarray(data).reshape(1, -1)
 
-                    prediction = model.predict(data)
+                    prediction = handDataDict[handType].model.predict(data)
 
                     if type(prediction[0]) is not np.int64 and len(prediction[0]) > 4:
                         print("option 1")
@@ -195,7 +198,6 @@ def classify_user(auto_corr):
 if __name__ == "__main__":
     print("flag 1")
     auto_corr = parse_command_line_arguments()
-    auto_corr = False
     print("flag 2")
 
     classify_user(auto_corr)

@@ -43,8 +43,7 @@ def parse_command_line_arguments():
 
     return argument.model
 
-def train_hand_model(model_type):
-    f = None
+def train_hand_model(model_type, hand_type):
     data_dict = pickle.load(open('./data.pickle', 'rb'))
     data = np.asarray(data_dict['data'])
     print("data shape:", data.shape)
@@ -66,7 +65,6 @@ def train_hand_model(model_type):
         y_predict = model.predict(x_test)
         score = accuracy_score(y_predict, y_test)
 
-
     elif model_type=="svm":
         params = random_parameters(svm_params)
         print("Running support vector machine with parameters: ", params, "\n...\n")
@@ -76,7 +74,6 @@ def train_hand_model(model_type):
         y_predict = model.predict(x_test)
 
         score = accuracy_score(y_predict, y_test)
-
 
     elif model_type=="neural_net":
         selected_parameters = random_parameters(nn_params)
@@ -105,17 +102,16 @@ def train_hand_model(model_type):
 
         scores = model.evaluate(x_test, y_test_encoded)
         score = scores[1]
-        
-    
 
     print('{}% of samples were classified correctly !'.format(score * 100))
 
-    f = open('model.p', 'wb')
+    f = open(f'model_{hand_type}.p', 'wb')
     pickle.dump({'model': model}, f)
     f.close()
 
 if __name__ == "__main__":
     model_type = parse_command_line_arguments()
-    train_hand_model(model_type)
+    for hand_type in ["Right", "Left"]:
+        train_hand_model(model_type, hand_type)
     
 
