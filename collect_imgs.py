@@ -19,6 +19,7 @@ for j in range(number_of_classes):
     done = False
     while True:
         ret, frame = cap.read()
+        frame = cv2.flip(frame, 1)
         H, W, _ = frame.shape
 
         minY, maxY = H // 8, H - H // 8
@@ -34,6 +35,7 @@ for j in range(number_of_classes):
     counter = 0
     while counter < dataset_size:
         ret, frame = cap.read()
+        frame = cv2.flip(frame, 1)
         H, W, _ = frame.shape
 
         minY, maxY = H // 8, H - H // 8
