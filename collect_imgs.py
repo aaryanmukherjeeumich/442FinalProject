@@ -7,7 +7,7 @@ DATA_DIR = './data'
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
 
-dataset_size = 100
+dataset_size = 1000
 
 labels_dict = {
     0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H', 8: 'I',
@@ -60,7 +60,7 @@ for j in labels_dict:
             cv2.imshow('frame', frame)
             cv2.waitKey(25)
             cv2.imwrite(os.path.join(DATA_DIR, hand_type, str(j), '{}.jpg'.format(counter)), frame[minY:maxY, minX:maxX])
-            time.sleep(0.05)
+            time.sleep(0.01)
             counter += 1
 
 cap.release()

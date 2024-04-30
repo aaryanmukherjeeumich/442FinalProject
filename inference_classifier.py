@@ -6,6 +6,7 @@ import autocorrect
 # import jamspell
 from textblob import TextBlob
 import argparse
+import textwrap
 
 import cv2
 import mediapipe as mp
@@ -36,7 +37,7 @@ def parse_command_line_arguments():
 
 def classify_user(auto_corr):
 
-    print("auto_corr: ", auto_corr)
+    # print("auto_corr: ", auto_corr)
 
     model_dict_right = pickle.load(open('./model_Right.p', 'rb'))
     model_right = model_dict_right['model']
@@ -90,6 +91,8 @@ def classify_user(auto_corr):
 
         results = hands.process(frame_rgb)
         if results.multi_hand_landmarks:
+            last_hand_time = time.time()
+
             for hand in results.multi_hand_landmarks:
                 mp_drawing.draw_landmarks(
                     frame, hand, mp_hands.HAND_CONNECTIONS,
@@ -135,22 +138,22 @@ def classify_user(auto_corr):
                     prediction = handDataDict[handType].model.predict(data)
 
                     if type(prediction[0]) is not np.int64 and len(prediction[0]) > 4:
-                        print("option 1")
+                        # print("option 1")
                         max_val = np.argmax(prediction[0])
                         predicted_character = labels_dict[int(max_val)]
 
                     else:
-                        print("option 2")
+                        # print("option 2")
                         predicted_character = labels_dict[int(prediction[0])]
 
-                    print("prediction: ", prediction)
-                    print("prediction[0]:", prediction[0])
+                    # print("prediction: ", prediction)
+                    # print("prediction[0]:", prediction[0])
 
                     if predicted_character != handDataDict[handType].current_char:
                         handDataDict[handType].current_char = predicted_character
                         handDataDict[handType].last_change_time = time.time()  # Update last change time
                     else:
-                        if time.time() - handDataDict[handType].last_change_time >= 3:
+                        if time.time() - handDataDict[handType].last_change_time >= 2:
                             word += handDataDict[handType].current_char
                             handDataDict[handType].last_change_time = time.time()
 
@@ -160,7 +163,11 @@ def classify_user(auto_corr):
                     cv2.putText(frame, predicted_character, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (0, 0, 0), 3,
                             cv2.LINE_AA)
         else:  # No hand detected
-            if time.time() - last_hand_time >= 10:  # Check time since last hand detection
+            if time.time() - last_hand_time >= 1:
+                handDataDict["Right"].last_change_time = time.time()
+                handDataDict["Left"].last_change_time = time.time()
+
+            if time.time() - last_hand_time >= 5:  # Check time since last hand detection
                 word += ' '  # Add a space
                 last_hand_time = time.time()  # Update last time hand was detected
             # if time.time() - start_time < 10:
@@ -174,17 +181,35 @@ def classify_user(auto_corr):
         #     cv2.putText(frame, "Press 'q' to quit", (int(W/2 - 250), int(H/2)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
         #     cv2.putText(frame, "Remove hands from view to add a space", (int(W/2 - 250), int(H/2)+50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
+        H, W, _ = frame.shape
+
+        wrapped_output_text = textwrap.wrap('Output : ' + (word.replace(" ", "-")), width=40)
+
+        # wrapped_output_text = textwrap.wrap('Output: " + "the-quick-brown-fox-jumps-over-a-lazy-dog', width=50)
+        gap = 0
+        for i, line in enumerate(wrapped_output_text):
+            gap = i
+            cv2.putText(frame, line, (100, 50 + 50 * i), cv2.FONT_HERSHEY_DUPLEX, 1.3, (100, 255, 100), 3,
+                        cv2.LINE_AA)
+
+        # cv2.putText(frame, 'Output : ' + (word.replace(" ", "-")), (100, 50), cv2.FONT_HERSHEY_DUPLEX, 1.3, (100, 255, 100), 3,
+        #             cv2.LINE_AA)
+
         if auto_corr:
-            cv2.putText(frame, 'Autocorrection : ' +  (str(TextBlob(word.lower()).correct())), (100, 50), cv2.FONT_HERSHEY_DUPLEX, 1.3, (100, 255, 100), 3,
+            corrected_text = "Autocorrect: " + (str(TextBlob(word.lower()).correct()))
+            wrapped_corrected_text = textwrap.wrap(corrected_text, width= 40)
+            # wrapped_corrected_text = textwrap.wrap("the quick brown fox jumps over a lazy dog", width=W * 9//10)
+
+            for i, line in enumerate(wrapped_corrected_text):
+
+                cv2.putText(frame, line, (100, 100 + 50 * (i+gap)), cv2.FONT_HERSHEY_DUPLEX, 1.3, (100, 255, 100), 3,
                     cv2.LINE_AA)
-        cv2.putText(frame, 'Output : ' + (word.replace(" ", "-")), (100, 100), cv2.FONT_HERSHEY_DUPLEX, 1.3, (100, 255, 100), 3,
-                    cv2.LINE_AA)
-    
+
         cv2.putText(start_frame, "Press 'q' to quit", (int(W/2 - 250), int(H/2)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
         cv2.putText(start_frame, "Remove hands from view for 10 sec. to add a space", (int(W/2 - 250), int(H/2)+50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-        cv2.putText(start_frame, "Begining in 10 seconds", (int(W/2 - 250), int(H/2)+100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.putText(start_frame, "Beginning in 5 seconds", (int(W/2 - 250), int(H/2)+100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
-        if time.time() - start_time > 10:
+        if time.time() - start_time > 5:
             start_frame = frame
     
         cv2.imshow('frame',start_frame)

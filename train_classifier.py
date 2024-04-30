@@ -44,7 +44,7 @@ def parse_command_line_arguments():
     return argument.model
 
 def train_hand_model(model_type, hand_type):
-    data_dict = pickle.load(open('./data.pickle', 'rb'))
+    data_dict = pickle.load(open(f'./data_{hand_type}.pickle', 'rb'))
     data = np.asarray(data_dict['data'])
     print("data shape:", data.shape)
     print("data[0]: ", data[0])
@@ -56,7 +56,7 @@ def train_hand_model(model_type, hand_type):
     print('labels type: ', labels.dtype)
     print("labels: ", labels)
 
-    x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, shuffle=True, stratify=labels)
+    x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.1, shuffle=True, stratify=labels)
     model = None
     if model_type=="random_forest":
         model = RandomForestClassifier()
